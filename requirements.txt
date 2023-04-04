@@ -1,0 +1,19 @@
+# framework
+django
+djangorestframework
+# filtering
+django-filter
+# postgresql driver
+psycopg2-binary
+# swagger
+drf-yasg
+# to hide data
+python-decouple
+# work with images
+Pillow
+# email tasks
+celery
+# celery backend for django
+django-celery-results
+# authentication
+django-rest-knox
