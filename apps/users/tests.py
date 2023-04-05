@@ -1,21 +1,108 @@
 from django.test import TestCase
+from django.contrib.auth import get_user_model
+from django.urls import reverse
 from rest_framework.test import APIClient
+from knox.models import AuthToken
 
-class UserRegistrationTestCase(TestCase):
+User = get_user_model()
+
+
+class RegistrationTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
 
-    def test_user_registration(self):
-        response = self.client.post('/users/registration/', {
+    def test_registration(self):
+        response = self.client.post('/account/registration/', {
             'username': 'testuser',
             'email': 'testuser@example.com',
-            'password': 'testpassword'
+            'password': 'testpass',
+            'password_confirm': 'testpass'
         })
 
-        # Check that the response status code is 201 (Created)
         self.assertEqual(response.status_code, 201)
-
-        # Check that the user was created in the database
-        from django.contrib.auth.models import User
         user = User.objects.get(username='testuser')
         self.assertEqual(user.email, 'testuser@example.com')
+        self.assertFalse(user.is_active)
+
+
+class ActivateTestCase(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            username='testuser', email='testuser@example.com',
+            password='testpass', activation_code='test-code')
+        self.activation_url = reverse(
+            'activate', args=[self.user.activation_code])
+
+    def test_activation(self):
+        response = self.client.get(self.activation_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.is_active)
+
+
+class LoginTestCase(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            username='testuser', email='testuser@example.com',
+            password='testpass', is_active=True)
+
+    def test_login(self):
+        for i in range(2):
+            responce = self.client.post('/account/login/', {
+                'username': 'testuser',
+                'password': 'testpass'
+            })
+            self.assertEqual(responce.status_code, 200)
+
+        failed_responce = self.client.post('/account/login/', {
+            'username': 'testuser',
+            'password': 'testpass'
+        })
+        self.assertEqual(failed_responce.status_code, 403)
+
+
+class PwdUpdateTestCase(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            username='testuser', email='testuser@example.com',
+            password='testpass', is_active = True
+        )
+        self.token = AuthToken.objects.create(self.user)[1]
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
+
+    def test_update(self):
+        responce = self.client.put('/account/change-password/', {
+            'old_pwd': 'testpass',
+            'new_pwd': 'testpass2',
+            'new_pwd_conf': 'testpass2'
+        })
+        self.assertEqual(responce.status_code, 200)
+
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('testpass2'))
+
+class PwdRestoreTestCase(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            username='testuser', email='testuser@example.com',
+            password='testpass', is_active = True,
+            activation_code='test-code'
+        )
+        self.token = AuthToken.objects.create(self.user)[1]
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
+
+    def test_update(self):
+        responce = self.client.put('/account/restore-password/', {
+            'activation_code': 'test-code',
+            'new_pwd': 'testpass2',
+            'new_pwd_conf': 'testpass2'
+        })
+        self.assertEqual(responce.status_code, 200)
+
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('testpass2'))    

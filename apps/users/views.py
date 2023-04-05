@@ -1,16 +1,21 @@
 from django.contrib.auth import get_user_model
-from rest_framework.authtoken.models import Token
+from django.utils import timezone
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import status, permissions, generics
 from knox.models import AuthToken
+from knox.settings import knox_settings
+import logging
 
 from .serializers import (RegistrationSerializer, ActivationSerializer,
                           LoginSerializer, PasswordUpdateSerializer,
                           PasswordRestoreSerializer, UserSerializer)
 from .utils import create_activation_code
+from .tasks import send_password_restore
 
 User = get_user_model()
+
+logger = logging.getLogger('main')
 
 
 class Registration(generics.CreateAPIView):
@@ -36,27 +41,29 @@ class Activation(generics.RetrieveAPIView):
         return Response({'message': 'Account succesfully activated!'})
 
 
-class LoginAPI(generics.GenericAPIView):
+class LoginAPI(generics.CreateAPIView):
     serializer_class = LoginSerializer
 
+    def get_token_limit_per_user(self):
+        return knox_settings.TOKEN_LIMIT_PER_USER
+
     def post(self, request, *args, **kwargs):
+        token_limit_per_user = self.get_token_limit_per_user()
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data
+        if token_limit_per_user is not None:
+            now = timezone.now()
+            token = user.auth_token_set.filter(expiry__gt=now)
+            if token.count() >= token_limit_per_user:
+                return Response(
+                    {"error": "Maximum amount of tokens allowed per user exceeded."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
         return Response({
             "user": UserSerializer(user, context=self.get_serializer_context()).data,
             "token": AuthToken.objects.create(user)[1]
         })
-
-
-# class Logout(generics.DestroyAPIView):
-#     permission_classes = (permissions.IsAuthenticated,)
-
-#     def delete(self, request: Request) -> Response:
-#         Token.objects.get(user=request.user).delete()
-#         return Response(
-#             {'message': 'Loged out'},
-#             status.HTTP_200_OK)
 
 
 class UserAPI(generics.RetrieveAPIView):
@@ -85,12 +92,10 @@ class PasswordRestore(generics.GenericAPIView):
 
     def get(self, request: Request) -> Response:
         create_activation_code(request.user)
-        # TODO
-        # send_activation_code(request.user, message="""
-        # Here's your password restore code""", subject='Password restore')
-        # return Response(
-        #     {'message': 'Your restore code was sent to your email'},
-        #     status=status.HTTP_200_OK)
+        send_password_restore.delay(request.user.id)
+        return Response(
+            {'message': 'Your restore code was sent to your email'},
+            status=status.HTTP_200_OK)
 
     def put(self, request: Request):
         serializer = self.get_serializer(data=request.data)
