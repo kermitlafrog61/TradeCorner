@@ -1,14 +1,13 @@
 from rest_framework import serializers
 
-# from apps.products.serializers import ProductSerializer
+from apps.products.serializers import ProductSerializer
 from apps.users.serializers import UserSerializer
 from .models import Order
 from .units import STATUS_CHOISES
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    user = serializers.RelatedField(
-        default=serializers.CurrentUserDefault(), read_only=True)
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
         model = Order
@@ -16,15 +15,14 @@ class OrderSerializer(serializers.ModelSerializer):
             'id', 'user', 'product', 'created_at',
             'updated_at', 'status', 'address'
         )
-        read_only = (
+        read_only_fields = (
             'id', 'user', 'product',
             'created_at', 'updated_at'
         )
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
-        # rep['product'] = ProductSerializer(instance.product)
-        rep['user'] = UserSerializer(instance.user)
+        rep['product'] = ProductSerializer(instance.product).data
         return rep
 
 

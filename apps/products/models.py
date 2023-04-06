@@ -1,5 +1,4 @@
 from django.db import models
-# from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 
@@ -31,7 +30,6 @@ class Product(models.Model):
     is_sold = models.BooleanField(default=False)
     created_at = models.DateField(auto_now_add=True)
     updated_at = models.DateField(auto_now=True)
-    product_id = models.ForeignKey('Category', on_delete=models.PROTECT, null=True)
 
 
     class Meta:
@@ -49,7 +47,6 @@ class Comment(models.Model):
     updated_at = models.DateTimeField(
         auto_now=True
     )
-    title = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='comments')
 
     class Meta:
         verbose_name = 'Коментарий'

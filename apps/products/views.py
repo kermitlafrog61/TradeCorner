@@ -1,47 +1,35 @@
-from django.shortcuts import render
-from rest_framework.decorators import api_view
+from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated, AllowAny
+
 from .serializers import ProductSerializer
 from .models import Product
-from rest_framework.views import APIView
-
-class ProductAPIView(APIView):
-    def get(self, request):
-        all_products = Product.objects.all()
-        return Response({'posts': ProductSerializer(all_products, many=True).data})
-    
-    def create_post(self, request):
-        serializer = ProductSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response({'post': serializer.data})
-    
-    def get_new_product(self, request, *arg, **kwargs):
-        pk = kwargs.get('pk', None)
-        if not pk:
-            return Response({'Ошибка': 'Метод не отвечает'})
-        try:
-            instance = Product.objects.get(pk=pk)
-        except:
-            return Response({'Ошибка': 'Продукт не существует'})
-        
-        serializer = ProductSerializer(data=request.data, instance=instance)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response({'post': serializer.data})
-    
-    def delete(self, request, *arg, **kwargs):
-        pk = kwargs.get('pk', None)
-        if not pk:
-            return Response({'Ошибка': 'Метод не удаляется'})
-        try:
-            instance = Product.objects.get(pk=pk)
-            instance.delete()
-        except:
-            return Response({'post': 'delete post ' + str(pk)})
-    
-    
+from .permissions import IsAuthor
+from apps.orders.serializers import OrderSerializer
 
 
+class ProductViewSet(ModelViewSet):
+    queryset = Product.objects.all()
 
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            self.permission_classes = (IsAuthenticated,)
+        elif self.request.method in ('PUT', 'PATCH', 'DESTROY'):
+            self.permission_classes = (IsAuthor,)
+        else:
+            self.permission_classes = (AllowAny,)
+        return super().get_permissions()
 
+    def get_serializer_class(self):
+        if self.action == 'order':
+            return OrderSerializer
+        return ProductSerializer
+
+    @action(methods=['POST'], detail=True)
+    def order(self, request, pk=None):
+        product = self.get_object()
+        serilizer = self.get_serializer(data=request.data, context={'request': request})
+        serilizer.is_valid(raise_exception=True)
+        serilizer.save(product=product)
+        return Response({'message': f'Product {product.id} was ordered succesfully'})

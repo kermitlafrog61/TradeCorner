@@ -25,5 +25,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('account/', include('apps.users.urls'), name='user accounts api'),
     path('', include('apps.orders.urls')),
-    # path('', include('apps.products.urls')),
+    path('', include('apps.products.urls')),
 ]

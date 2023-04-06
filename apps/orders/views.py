@@ -22,11 +22,6 @@ class OrderViewSet(mixins.RetrieveModelMixin,
         serializer = self.get_serializer(data=request.data)
 
 
-class OrderCreate(generics.CreateAPIView):
-    serializer_class = OrderSerializer
-    permission_classes = (permissions.IsAuthenticated,)
-
-
 class OrderOwnerList(generics.ListAPIView):
     serializer_class = OrderSerializer
     permission_classes = (IsOwner,)
