@@ -1,7 +1,7 @@
 from django.db import models
-# from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
+from PIL import Image
 
 
 User = get_user_model()
@@ -25,7 +25,7 @@ class Product(models.Model):
     category = models.ForeignKey(Category, related_name='products', on_delete=models.CASCADE)
     title = models.CharField(max_length=50)
     slug = models.SlugField(max_length=50)
-    image = models.ImageField(upload_to='products', null=True)
+    image = models.ImageField(default='default.jpg', upload_to='product_images')
     price = models.IntegerField()
     description = models.TextField()
     is_sold = models.BooleanField(default=False)
@@ -33,6 +33,15 @@ class Product(models.Model):
     updated_at = models.DateField(auto_now=True)
     product_id = models.ForeignKey('Category', on_delete=models.PROTECT, null=True)
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        img = Image.open(self.image.path)
+
+        if img.height > 300 or img.width > 300:
+            output_size = (300, 300)
+            img.thumbnail(output_size)
+            img.save(self.image.path)    
 
     class Meta:
         verbose_name = 'Продукт'
