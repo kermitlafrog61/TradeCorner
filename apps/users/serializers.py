@@ -40,7 +40,7 @@ class ActivationSerializer(serializers.Serializer):
     def validate_activation_code(self, activation_code: str):
         if not User.objects.filter(activation_code=activation_code).exists():
             raise serializers.ValidationError(
-                'Неверно указан активационный код')
+                'The activation code is not correct!')
         return activation_code
 
     def activate(self):
@@ -102,6 +102,7 @@ class PasswordRestoreSerializer(serializers.Serializer):
         user.activation_code = ''
         user.save()
         return attrs
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
