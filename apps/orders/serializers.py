@@ -3,7 +3,7 @@ from rest_framework import serializers
 from apps.products.serializers import ProductSerializer
 from apps.users.serializers import UserSerializer
 from .models import Order
-from .units import STATUS_CHOISES
+from .tasks import send_order_created, send_updated_status, send_cancel_status
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -16,27 +16,93 @@ class OrderSerializer(serializers.ModelSerializer):
             'updated_at', 'status', 'address'
         )
         read_only_fields = (
-            'id', 'user', 'product',
-            'created_at', 'updated_at'
+            'id', 'user', 'product', 'created_at',
+            'updated_at', 'status'
         )
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
         rep['product'] = ProductSerializer(instance.product).data
+        rep['user'] = instance.user.username
         return rep
 
-
-class OrderUpdateStatus(serializers.Serializer):
-    new_status = serializers.ChoiceField(choices=STATUS_CHOISES)
-
     def validate(self, attrs):
-        attrs['new_status']
+        user = attrs['user']
+        product = self.context['product']
+        if user == product.user:
+            raise serializers.ValidationError("You can't order from yourserlf")
+        elif Order.objects.filter(user=user, product=product).exists():
+            raise serializers.ValidationError("You can't order twice")
+
+        attrs['product'] = product
+        return attrs
+
+    def create(self, validated_data):
+        order = super().create(validated_data)
+        send_order_created.delay(order.id)
+        return order
 
 
-class OrderOwnerListSerializer(serializers.ModelSerializer):
+class OrderUpdateStatus(serializers.ModelSerializer):
+    UPDATE_STATUS_CHOISES = (
+        ('SHIP', 'Shipping'),
+        ('DELIVER', 'Delivered'),
+    )
+
+    status = serializers.ChoiceField(choices=UPDATE_STATUS_CHOISES)
+
     class Meta:
         model = Order
-        fields = (
-            'id', 'user', 'product', 'created_at',
-            'updated_at', 'status', 'address'
-        )
+        fields = ('status',)
+
+    def validate(self, attrs):
+        order_status = self.instance.status
+        if self.instance.status in ('CANCEL', 'COMPLETE'):
+            raise serializers.ValidationError(
+                'You cannot update finished order')
+        
+        elif order_status == attrs['status']:
+            raise serializers.ValidationError(f'Order in already {order_status}')
+        return attrs
+
+    def save(self, **kwargs):
+        order = super().save(**kwargs)
+        send_updated_status.delay(order.id)
+        return order
+
+
+class OrderCancelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = ('status',)
+
+    def __init__(self, instance=None, data=..., **kwargs):
+        super().__init__(instance, data, **kwargs)
+        order = self.instance
+        if order.status in ('CANCEL', 'COMPLETE'):
+            raise serializers.ValidationError(
+                {'detail': 'You cannot cancel finished order'})
+
+        send_cancel_status.delay(order.id, self.context['request'].user.id)
+        order.status = 'CANCEL'
+        order.save()
+
+
+class OrderConfirmSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = ('status',)
+
+    def __init__(self, instance=None, data=..., **kwargs):
+        super().__init__(instance, data, **kwargs)
+        order = self.instance
+        confirm_on = self.context['confirm_on']
+        if order.status != confirm_on or order.status in ('CANCEL', 'PROCESS', 'SHIP', 'COMPLETE'):
+            raise serializers.ValidationError(
+                {'detail': 'Order is already confirmed'})
+
+        if confirm_on == 'PENDING':
+            order.status = 'PROCESS'
+        else:
+            order.status = 'COMPLETE'
+        order.save()

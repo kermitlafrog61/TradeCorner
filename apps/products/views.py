@@ -2,11 +2,13 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework import status
 
 from .serializers import ProductSerializer
 from .models import Product
 from .permissions import IsAuthor
 from apps.orders.serializers import OrderSerializer
+from apps.orders.tasks import send_order_created
 
 
 class ProductViewSet(ModelViewSet):
@@ -29,7 +31,9 @@ class ProductViewSet(ModelViewSet):
     @action(methods=['POST'], detail=True)
     def order(self, request, pk=None):
         product = self.get_object()
-        serilizer = self.get_serializer(data=request.data, context={'request': request})
-        serilizer.is_valid(raise_exception=True)
-        serilizer.save(product=product)
-        return Response({'message': f'Product {product.id} was ordered succesfully'})
+        serializer = self.get_serializer(data=request.data, context={
+            'request': request, 'product': product})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({'message': f'Product {product.title} was ordered'},
+                        status=status.HTTP_201_CREATED)

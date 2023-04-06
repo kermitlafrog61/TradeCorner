@@ -1,6 +1,5 @@
 import os
 import logging
-import traceback
 
 from celery import Task
 from celery import Celery
@@ -23,6 +22,5 @@ logger = logging.getLogger('main')
 
 class LogErrorsTask(Task):
     def on_failure(self, exc, task_id, args, kwargs, einfo):
-        einfo = ''
         logger.exception('Celery task failed: %s', str(exc), exc_info=False)
         super(LogErrorsTask, self).on_failure(exc, task_id, args, kwargs, einfo)
