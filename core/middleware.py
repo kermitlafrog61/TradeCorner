@@ -1,6 +1,6 @@
 import logging
 
-logger = logging.getLogger('main')
+logger = logging.getLogger('user_logger')
 
 class LogUserActivityMiddleware:
     def __init__(self, get_response):

@@ -61,7 +61,7 @@ class LoginAPI(generics.CreateAPIView):
                     status=status.HTTP_403_FORBIDDEN
                 )
         return Response({
-            "user": UserSerializer(user, context=self.get_serializer_context()).data,
+            "user": UserSerializer(user).data,
             "token": AuthToken.objects.create(user)[1]
         })
 
@@ -86,7 +86,7 @@ class PasswordUpdate(generics.UpdateAPIView):
             status=status.HTTP_200_OK)
 
 
-class PasswordRestore(generics.GenericAPIView):
+class PasswordRestore(generics.RetrieveUpdateAPIView):
     serializer_class = PasswordRestoreSerializer
     permission_classes = (permissions.IsAuthenticated,)
 

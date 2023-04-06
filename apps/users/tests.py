@@ -7,6 +7,16 @@ from knox.models import AuthToken
 User = get_user_model()
 
 
+def create_test_user():
+    user = User.objects.create_user(
+            username='testuser', email='testuser@example.com',
+            password='testpass', is_active = True,
+            activation_code='test-code'
+    )
+    return user
+
+
+
 class RegistrationTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -28,9 +38,8 @@ class RegistrationTestCase(TestCase):
 class ActivateTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.user = User.objects.create_user(
-            username='testuser', email='testuser@example.com',
-            password='testpass', activation_code='test-code')
+        self.user = create_test_user()
+        self.user.is_active = False
         self.activation_url = reverse(
             'activate', args=[self.user.activation_code])
 
@@ -45,9 +54,7 @@ class ActivateTestCase(TestCase):
 class LoginTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.user = User.objects.create_user(
-            username='testuser', email='testuser@example.com',
-            password='testpass', is_active=True)
+        self.user = create_test_user()
 
     def test_login(self):
         for i in range(2):
@@ -67,10 +74,7 @@ class LoginTestCase(TestCase):
 class PwdUpdateTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.user = User.objects.create_user(
-            username='testuser', email='testuser@example.com',
-            password='testpass', is_active = True
-        )
+        self.user = create_test_user()
         self.token = AuthToken.objects.create(self.user)[1]
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
 
@@ -88,11 +92,7 @@ class PwdUpdateTestCase(TestCase):
 class PwdRestoreTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.user = User.objects.create_user(
-            username='testuser', email='testuser@example.com',
-            password='testpass', is_active = True,
-            activation_code='test-code'
-        )
+        self.user = create_test_user()
         self.token = AuthToken.objects.create(self.user)[1]
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
 

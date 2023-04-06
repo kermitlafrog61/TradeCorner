@@ -195,6 +195,7 @@ LOGGING = {
         'main_formatter': {
             'format': '{asctime} - {levelname} - {module} - {message}',
             'style': '{',
+            'exc_info': False,
         },
     },
 
@@ -216,6 +217,11 @@ LOGGING = {
             'propagate': True,
             'level': 'INFO',
         },
+        'user_logger': {
+            'handlers': ['file', 'console'],
+            'propagate': True,
+            'level': 'WARNING',
+        }
     },
 }
 
