@@ -24,18 +24,16 @@ class Product(models.Model):
     user = models.ForeignKey(User, related_name='products', on_delete=models.CASCADE)
     category = models.ForeignKey(Category, related_name='products', on_delete=models.CASCADE)
     title = models.CharField(max_length=50)
-    slug = models.SlugField(max_length=50)
     image = models.ImageField(default='default.jpg', upload_to='product_images')
     price = models.IntegerField()
     description = models.TextField()
     is_sold = models.BooleanField(default=False)
     created_at = models.DateField(auto_now_add=True)
     updated_at = models.DateField(auto_now=True)
-    product_id = models.ForeignKey('Category', on_delete=models.PROTECT, null=True)
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-
+        # Image check
         img = Image.open(self.image.path)
 
         if img.height > 300 or img.width > 300:

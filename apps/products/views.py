@@ -20,7 +20,6 @@ class CustomPagination(PageNumberPagination):
 
 class ProductViewSet(ModelViewSet):
     queryset = Product.objects.all()
-    permission_classes = [IsAdminOrReadOnly, IsOwnerOrReadOnly]
     serializer_class = ProductSerializer
     pagination_class = CustomPagination
 
@@ -58,9 +57,8 @@ class ProductViewSet(ModelViewSet):
             queryset = queryset.filter(price__lte=max_price)
         return queryset
     
-    @action(methods=['POST'], detail=True)
-    def upload_image(self, request, pk=None):
-        product = self.get_object()
+    def create(self, request, *args, **kwargs):
+        product = super().create(request, *args, **kwargs)
         image_file = request.FILES.get('image', None)
 
         if image_file:
@@ -69,12 +67,13 @@ class ProductViewSet(ModelViewSet):
             uploaded_file = SimpleUploadedFile(
                 image_name, content, content_type='image/jpeg')
             product.image.save(image_name, uploaded_file, save=True)
-            return Response({'message': f'Image {image_name} uploaded successfully'})
-        else:
-            return Response({'message': 'Image not provided'}, status=400)
+        return Response({'message': f'Image {image_name} uploaded successfully'})
 
     @action(methods=['GET'], detail=True)
     def download_image(self, request, pk=None):
         product = self.get_object()
         image_url = request.build_absolute_uri(product.image.url)
         return Response({'image_url': image_url})
+    
+
+# TODO: rating, like,
