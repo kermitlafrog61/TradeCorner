@@ -7,8 +7,8 @@ router = DefaultRouter()
 router.register('orders', OrderViewSet, 'orders')
 
 urlpatterns = [
-    path('orders/<int:pk>/confirm/', OrderConfirm.as_view(), name='confirm'),
-    path('orders/<int:pk>/complete/', OrderComplete.as_view(), name='complete'),
+    path('orders/confirm/<str:activation_code>/', OrderConfirm.as_view(), name='confirm'),
+    path('orders/complete/<str:activation_code>/', OrderComplete.as_view(), name='complete'),
 ]
 
 urlpatterns += router.urls

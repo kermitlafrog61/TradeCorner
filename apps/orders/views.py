@@ -79,21 +79,19 @@ class OrderOwnerList(generics.ListAPIView):
 
 class OrderConfirm(generics.RetrieveAPIView):
     serializer_class = OrderConfirmSerializer
-    permission_classes = (IsOwner,)
-    queryset = Order.objects.all()
 
-    def get(self, request, pk):
-        order = self.get_object()
-        self.get_serializer(order, context={'confirm_on': 'PENDING'})
+    def get(self, request, activation_code):
+        order = Order.objects.get(activation_code=activation_code)
+        self.get_serializer(
+            order, context={'confirm_on': 'PENDING', 'activation_code': activation_code})
         return Response({'message': f'Order on {order.product.title} confirmed'})
 
 
 class OrderComplete(generics.RetrieveAPIView):
     serializer_class = OrderConfirmSerializer
-    permission_classes = (IsAuthor,)
-    queryset = Order.objects.all()
 
-    def get(self, request, pk):
-        order = self.get_object()
-        self.get_serializer(order, context={'confirm_on': 'DELIVER'})
+    def get(self, request, activation_code):
+        order = Order.objects.get(activation_code=activation_code)
+        self.get_serializer(
+            order, context={'confirm_on': 'DELIVER', 'activation_code': activation_code})
         return Response({'message': f'Order {order.product.title} completed'})

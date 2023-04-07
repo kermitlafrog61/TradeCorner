@@ -25,3 +25,4 @@ class Order(models.Model):
     status = models.CharField(
         max_length=9, choices=STATUS_CHOISES, default='PENDING')
     address = models.CharField(max_length=128)
+    activation_code = models.CharField(max_length=10)

@@ -1,9 +1,9 @@
 from rest_framework import serializers
 
 from apps.products.serializers import ProductSerializer
-from apps.users.serializers import UserSerializer
 from .models import Order
 from .tasks import send_order_created, send_updated_status, send_cancel_status
+from .utils import create_activation_code
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -39,6 +39,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         order = super().create(validated_data)
+        create_activation_code(order)
         send_order_created.delay(order.id)
         return order
 
@@ -68,6 +69,7 @@ class OrderUpdateStatus(serializers.ModelSerializer):
     def save(self, **kwargs):
         order = super().save(**kwargs)
         send_updated_status.delay(order.id)
+        order.save()
         return order
 
 
@@ -97,9 +99,11 @@ class OrderConfirmSerializer(serializers.ModelSerializer):
         super().__init__(instance, data, **kwargs)
         order = self.instance
         confirm_on = self.context['confirm_on']
-        if order.status != confirm_on or order.status in ('CANCEL', 'PROCESS', 'SHIP', 'COMPLETE'):
-            raise serializers.ValidationError(
-                {'detail': 'Order is already confirmed'})
+
+        if order.activation_code != self.context['activation_code']:
+            raise serializers.ValidationError({'detail': 'Activation code is not correct'})
+
+        order.activation_code = ''
 
         if confirm_on == 'PENDING':
             order.status = 'PROCESS'

@@ -4,8 +4,9 @@ from django.urls import reverse
 from django.conf import settings
 from celery import shared_task
 
-from core.celery import LogErrorsTask
 from .models import Order
+from .utils import create_activation_code
+from core.celery import LogErrorsTask
 from apps.products.models import Product
 
 User = get_user_model()
@@ -20,7 +21,9 @@ def send_updated_status(order_id):
     Hello {user.username},
     There's status update on your {order.product.title} it is now {order.get_status_display()}"""
     if order.status == 'DELIVER':
-        complete_link = f"{settings.BASE_URL}{reverse('complete', args=[order_id])}"
+        create_activation_code(order)
+        activation_code = order.activation_code
+        complete_link = f"{settings.BASE_URL}{reverse('complete', args=[activation_code])}"
         message += f"""
     Proceed this link to complete your order {complete_link}"""
 
@@ -72,8 +75,9 @@ def send_cancel_status(order_id, user_id):
 @shared_task(base=LogErrorsTask)
 def send_order_created(order_id):
     order = Order.objects.get(pk=order_id)
+    activation_code = order.activation_code
     user = order.product.user
-    confirmation_link = f"{settings.BASE_URL}{reverse('confirm', args=[order_id])}"
+    confirmation_link = f"{settings.BASE_URL}{reverse('confirm', args=[activation_code])}"
     subject = f'New order for {order.product.title}'
     message = f"""
     Hello {user.username},
