@@ -1,4 +1,3 @@
-
 from rest_framework.permissions import BasePermission
 
 
@@ -12,4 +11,10 @@ class IsAuthorOrOwner(BasePermission):
 class IsOwner(BasePermission):
     def has_object_permission(self, request, view, order):
         return bool(request.user == order.product.user and
+                    request.user.is_authenticated)
+    
+
+class IsAuthor(BasePermission):
+    def has_object_permission(self, request, view, order):
+        return bool(request.user == order.user and
                     request.user.is_authenticated)

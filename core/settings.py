@@ -218,9 +218,9 @@ LOGGING = {
             'level': 'INFO',
         },
         'user_logger': {
-            'handlers': ['file', 'console'],
+            'handlers': ['file'],
             'propagate': True,
-            'level': 'WARNING',
+            'level': 'INFO',
         },
     },
 }

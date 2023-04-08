@@ -1,6 +1,3 @@
-
- 
-
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -108,4 +105,4 @@ class PwdRestoreTestCase(TestCase):
         self.assertEqual(responce.status_code, 200)
 
         self.user.refresh_from_db()
-        self.assertTrue(self.user.check_password('testpass2'))  
+        self.assertTrue(self.user.check_password('testpass2'))    
