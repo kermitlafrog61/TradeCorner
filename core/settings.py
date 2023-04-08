@@ -227,3 +227,9 @@ LOGGING = {
 
 if 'test' in sys.argv:
     MIDDLEWARE.remove('core.middleware.LogUserActivityMiddleware')
+
+
+# Media settings
+
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
