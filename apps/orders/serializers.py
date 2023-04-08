@@ -11,18 +11,10 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = (
-            'id', 'user', 'product', 'created_at',
-            'updated_at', 'status', 'address')
+        fields = '__all__'
         read_only_fields = (
             'id', 'user', 'product', 'created_at',
-            'updated_at', 'status')
-
-    def to_representation(self, instance):
-        rep = super().to_representation(instance)
-        rep['product'] = ProductSerializer(instance.product).data
-        rep['user'] = instance.user.username
-        return rep
+            'updated_at', 'status', 'activation_code')
 
     def validate(self, attrs):
         user = attrs['user']
@@ -31,7 +23,6 @@ class OrderSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("You can't order from yourserlf")
         elif Order.objects.filter(user=user, product=product).exists():
             raise serializers.ValidationError("You can't order twice")
-
         attrs['product'] = product
         return attrs
 
@@ -40,6 +31,12 @@ class OrderSerializer(serializers.ModelSerializer):
         create_activation_code(order)
         send_order_created.delay(order.id)
         return order
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep['product'] = ProductSerializer(instance.product).data
+        rep['user'] = instance.user.username
+        return rep
 
 
 class OrderUpdateStatus(serializers.ModelSerializer):

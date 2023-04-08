@@ -1,14 +1,11 @@
 from django.urls import path, include
-from django.conf import settings
-from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
-from .views import ProductViewSet
+from .views import ProductViewSet, CategoryList
 
 router = DefaultRouter()
 router.register('products', ProductViewSet, basename='products')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('categories/', CategoryList.as_view()),
 ]
-
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

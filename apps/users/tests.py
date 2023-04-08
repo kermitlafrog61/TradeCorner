@@ -22,7 +22,7 @@ class RegistrationTestCase(TestCase):
         self.client = APIClient()
 
     def test_registration(self):
-        response = self.client.post('/account/registration/', {
+        response = self.client.post('/accounts/registration/', {
             'username': 'testuser',
             'email': 'testuser@example.com',
             'password': 'testpass',
@@ -58,13 +58,13 @@ class LoginTestCase(TestCase):
 
     def test_login(self):
         for i in range(2):
-            responce = self.client.post('/account/login/', {
+            responce = self.client.post('/accounts/login/', {
                 'username': 'testuser',
                 'password': 'testpass'
             })
             self.assertEqual(responce.status_code, 200)
 
-        failed_responce = self.client.post('/account/login/', {
+        failed_responce = self.client.post('/accounts/login/', {
             'username': 'testuser',
             'password': 'testpass'
         })
@@ -79,7 +79,7 @@ class PwdUpdateTestCase(TestCase):
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
 
     def test_update(self):
-        responce = self.client.put('/account/change-password/', {
+        responce = self.client.patch('/accounts/change-password/', {
             'old_pwd': 'testpass',
             'new_pwd': 'testpass2',
             'new_pwd_conf': 'testpass2'
@@ -97,7 +97,7 @@ class PwdRestoreTestCase(TestCase):
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
 
     def test_update(self):
-        responce = self.client.put('/account/restore-password/', {
+        responce = self.client.patch('/accounts/restore-password/', {
             'activation_code': 'test-code',
             'new_pwd': 'testpass2',
             'new_pwd_conf': 'testpass2'

@@ -1,4 +1,6 @@
-from django.http import Http404
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_cookie
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
@@ -28,6 +30,11 @@ class OrderViewSet(mixins.RetrieveModelMixin,
         elif self.action == 'destroy':
             return OrderCancelSerializer
         return OrderSerializer
+    
+    @method_decorator(vary_on_cookie)
+    @method_decorator(cache_page(60*60))
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
 
     def partial_update(self, request, *args, **kwargs):
         order = self.get_object()

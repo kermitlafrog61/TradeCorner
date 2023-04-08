@@ -2,10 +2,10 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework import status, permissions, generics, mixins, viewsets
+from rest_framework import status, permissions, generics
 from knox.models import AuthToken
 from knox.settings import knox_settings
-import logging
+
 
 from .serializers import (RegistrationSerializer, ActivationSerializer,
                           LoginSerializer, PasswordUpdateSerializer,
@@ -14,8 +14,6 @@ from .utils import create_activation_code
 from .tasks import send_password_restore
 
 User = get_user_model()
-
-logger = logging.getLogger('main')
 
 
 class Registration(generics.CreateAPIView):
@@ -67,18 +65,18 @@ class LoginAPI(generics.CreateAPIView):
 
 
 class UserAPI(generics.RetrieveAPIView):
-    permission_classes = [permissions.IsAuthenticated, ]
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = UserSerializer
 
     def get_object(self):
         return self.request.user
 
 
-class PasswordUpdate(generics.UpdateAPIView):
+class PasswordUpdate(generics.GenericAPIView):
     serializer_class = PasswordUpdateSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
-    def put(self, request: Request) -> Response:
+    def patch(self, request: Request) -> Response:
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         return Response(
@@ -86,7 +84,7 @@ class PasswordUpdate(generics.UpdateAPIView):
             status=status.HTTP_200_OK)
 
 
-class PasswordRestore(generics.RetrieveUpdateAPIView):
+class PasswordRestore(generics.GenericAPIView):
     serializer_class = PasswordRestoreSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
@@ -97,7 +95,7 @@ class PasswordRestore(generics.RetrieveUpdateAPIView):
             {'message': 'Your restore code was sent to your email'},
             status=status.HTTP_200_OK)
 
-    def put(self, request: Request):
+    def patch(self, request: Request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         return Response(

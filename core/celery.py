@@ -1,6 +1,7 @@
 import os
 import logging
 
+from django.core.management import call_command
 from celery import Task
 from celery import Celery
 
@@ -19,3 +20,7 @@ class LogErrorsTask(Task):
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         logger.exception('Celery task failed: %s', str(exc), exc_info=False)
         super(LogErrorsTask, self).on_failure(exc, task_id, args, kwargs, einfo)
+
+@app.task
+def run_tests():
+    call_command('test')

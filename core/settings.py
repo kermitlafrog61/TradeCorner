@@ -1,11 +1,14 @@
+import os
 from datetime import timedelta
 from pathlib import Path
 import sys
 from decouple import config
 
+from celery.schedules import crontab
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-BASE_URL = 'http://localhost:8000'
+BASE_URL = 'http://localhost:8000/'
 
 SECRET_KEY = config('SECRET_KEY')
 
@@ -89,10 +92,7 @@ DATABASES = {
 CACHES = {
     "default": {
         "BACKEND": config('CACHE_ENGINE'),
-        "LOCATION": config('CACHE_BACKEND'),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
+        "LOCATION": config('CACHE_LOCATION'),
     }
 }
 
@@ -163,7 +163,10 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
-    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.MultiPartParser',
+        'rest_framework.parsers.FormParser',
+    ],
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.AutoSchema',
 }
 
@@ -199,6 +202,12 @@ CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_CACHE_BACKEND = 'django-cache'
+CELERY_BEAT_SCHEDULE = {
+    'run-tests': {
+        'task': 'core.celery.run_tests',
+        'schedule': crontab(minute=0, hour=0, day_of_week='*/2'),
+    },
+}
 
 
 # Logger settings
@@ -235,16 +244,18 @@ LOGGING = {
         'user_logger': {
             'handlers': ['file'],
             'propagate': True,
-            'level': 'INFO',
+            'level': 'WARNING',
         },
     },
 }
-
-if 'test' in sys.argv:
-    MIDDLEWARE.remove('core.middleware.LogUserActivityMiddleware')
 
 
 # Media settings
 
 MEDIA_URL = 'media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+
+if 'test' in sys.argv:
+    MIDDLEWARE.remove('core.middleware.LogUserActivityMiddleware')
+
+TEST_RUNNER = 'django.test.runner.DiscoverRunner'
