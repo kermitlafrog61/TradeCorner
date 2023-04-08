@@ -20,4 +20,4 @@ django-rest-knox
 # redis cache
 django-redis
 # deploy
-gunicorn==19.7.1
+gunicorn
