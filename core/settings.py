@@ -8,14 +8,14 @@ from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-BASE_URL = 'http://localhost:8000/'
+BASE_URL = 'https://tradecorner.onrender.com'
 
 SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['www.tradecorner.onrender.com']
 
 
 # Application definition
@@ -208,7 +208,7 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': crontab(minute=0, hour=0, day_of_week='*/2'),
     },
 }
-CELERY_ALWAYS_EAGER = True 
+CELERY_ALWAYS_EAGER = True
 
 
 # Logger settings
