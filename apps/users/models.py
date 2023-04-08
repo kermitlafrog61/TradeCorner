@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 
+from apps.products.models import Product
 
 class CustomUserManager(BaseUserManager):
     def _create(self, username, email, password, **extra_fields):
@@ -29,6 +30,7 @@ class CustomUser(AbstractBaseUser):
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     activation_code = models.CharField(max_length=10, blank=True)
+    recommendations = models.ManyToManyField(Product, related_name='')
 
     REQUIRED_FIELDS = ['email']
 

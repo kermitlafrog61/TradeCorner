@@ -13,12 +13,10 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = (
             'id', 'user', 'product', 'created_at',
-            'updated_at', 'status', 'address'
-        )
+            'updated_at', 'status', 'address')
         read_only_fields = (
             'id', 'user', 'product', 'created_at',
-            'updated_at', 'status'
-        )
+            'updated_at', 'status')
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
@@ -61,9 +59,10 @@ class OrderUpdateStatus(serializers.ModelSerializer):
         if self.instance.status in ('CANCEL', 'COMPLETE'):
             raise serializers.ValidationError(
                 'You cannot update finished order')
-        
+
         elif order_status == attrs['status']:
-            raise serializers.ValidationError(f'Order in already {order_status}')
+            raise serializers.ValidationError(
+                f'Order in already {order_status}')
         return attrs
 
     def save(self, **kwargs):
@@ -101,7 +100,8 @@ class OrderConfirmSerializer(serializers.ModelSerializer):
         confirm_on = self.context['confirm_on']
 
         if order.activation_code != self.context['activation_code']:
-            raise serializers.ValidationError({'detail': 'Activation code is not correct'})
+            raise serializers.ValidationError(
+                {'detail': 'Activation code is not correct'})
 
         order.activation_code = ''
 

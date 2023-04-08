@@ -47,7 +47,7 @@ class OrderViewSet(mixins.RetrieveModelMixin,
                          if order.user == request.user]
         return author_orders
 
-    @action(methods=['GET'], detail=False)
+    @action(['GET'], detail=False)
     def active(self, request, pk=None):
         active_orders = [order for order in self.get_author_orders(request)
                          if order.status not in ('CANCEL', 'COMPLETE')]
@@ -55,7 +55,7 @@ class OrderViewSet(mixins.RetrieveModelMixin,
         serializer = self.get_serializer(active_orders, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
-    @action(methods=['GET'], detail=False)
+    @action(['GET'], detail=False)
     def history(self, request, pk=None):
         active_orders = [order for order in self.get_author_orders(request)
                          if order.status in ('CANCEL', 'COMPLETE')]

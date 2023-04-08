@@ -17,3 +17,5 @@ celery
 django-celery-results
 # authentication
 django-rest-knox
+# redis cache
+django-redis

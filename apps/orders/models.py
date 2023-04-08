@@ -26,3 +26,7 @@ class Order(models.Model):
         max_length=9, choices=STATUS_CHOISES, default='PENDING')
     address = models.CharField(max_length=128)
     activation_code = models.CharField(max_length=10)
+
+    class Meta:
+        verbose_name = 'Заказ'
+        verbose_name_plural = 'Заказы'
