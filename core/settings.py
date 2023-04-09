@@ -8,7 +8,7 @@ from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-BASE_URL = 'https://carbon-caster-383119.de.r.appspot.com/'
+BASE_URL = 'https://tradecorner.onrender.com'
 
 SECRET_KEY = config('SECRET_KEY')
 
@@ -208,6 +208,7 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': crontab(minute=0, hour=0, day_of_week='*/2'),
     },
 }
+CELERY_BROKER_URL=config('CACHE_LOCATION')
 
 
 # Logger settings
