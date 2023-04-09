@@ -209,7 +209,6 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 CELERY_BROKER_URL=config('CACHE_LOCATION')
-CELERY_TASK_ALWAYS_EAGER = True
 
 
 # Logger settings
