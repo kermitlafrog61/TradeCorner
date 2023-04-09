@@ -19,10 +19,9 @@ class OrderViewSet(mixins.RetrieveModelMixin,
 
     def get_permissions(self):
         if self.request.method == 'PATCH':
-            self.permission_classes = (IsOwner,)
+            return (IsOwner(),)
         else:
-            self.permission_classes = (IsAuthorOrOwner,)
-        return super().get_permissions()
+            return (IsAuthorOrOwner(),)
 
     def get_serializer_class(self):
         if self.action == 'partial_update':

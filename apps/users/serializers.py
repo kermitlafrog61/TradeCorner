@@ -105,6 +105,17 @@ class PasswordRestoreSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
     class Meta:
         model = User
-        fields = ('username', 'email')
+        fields = ('username', 'email', 'password')
+
+    def validate(self, attrs):
+        user = self.context.get('request').user
+        password = attrs['password']
+
+        if not user.check_password(password):
+            raise serializers.ValidationError('Password is not correct')
+        attrs.pop('password')
+        return attrs

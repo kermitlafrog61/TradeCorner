@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.parsers import JSONParser
 from rest_framework import status, permissions, generics
 from knox.models import AuthToken
 from knox.settings import knox_settings
@@ -64,12 +65,17 @@ class LoginAPI(generics.CreateAPIView):
         })
 
 
-class UserAPI(generics.RetrieveAPIView):
+class UserAPI(generics.RetrieveUpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = UserSerializer
 
     def get_object(self):
         return self.request.user
+
+    def get_parsers(self):
+        if self.request.method in ('PUT', 'PATCH'):
+            return (JSONParser(),)
+        return super().get_parsers()
 
 
 class PasswordUpdate(generics.GenericAPIView):
