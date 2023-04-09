@@ -8,7 +8,7 @@ from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-BASE_URL = 'https://tradecorner.onrender.com'
+BASE_URL = 'https://carbon-caster-383119.de.r.appspot.com/'
 
 SECRET_KEY = config('SECRET_KEY')
 
@@ -133,6 +133,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
 
 # Default primary key field type
@@ -163,10 +164,10 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
-    # 'DEFAULT_PARSER_CLASSES': [
-    #     'rest_framework.parsers.MultiPartParser',
-    #     'rest_framework.parsers.FormParser',
-    # ],
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.MultiPartParser',
+        'rest_framework.parsers.FormParser',
+    ],
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.AutoSchema',
 }
 
@@ -197,21 +198,20 @@ SWAGGER_SETTINGS = {
 
 
 # Celery Configuration Options
+
 CELERY_TIMEZONE = "Asia/Bishkek"
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
-CELERY_RESULT_BACKEND = 'django-db'
-CELERY_CACHE_BACKEND = 'django-cache'
 CELERY_BEAT_SCHEDULE = {
     'run-tests': {
         'task': 'core.celery.run_tests',
         'schedule': crontab(minute=0, hour=0, day_of_week='*/2'),
     },
 }
-CELERY_ALWAYS_EAGER = True
 
 
 # Logger settings
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
