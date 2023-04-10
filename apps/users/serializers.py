@@ -30,7 +30,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
         create_activation_code(user)
-        send_activation_email.delay(user.id)
+        send_activation_email(user.id)
         return user
 
 

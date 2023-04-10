@@ -29,7 +29,7 @@ class OrderSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         order = super().create(validated_data)
         create_activation_code(order)
-        send_order_created.delay(order.id)
+        send_order_created(order.id)
         return order
 
     def to_representation(self, instance):
@@ -64,7 +64,7 @@ class OrderUpdateStatus(serializers.ModelSerializer):
 
     def save(self, **kwargs):
         order = super().save(**kwargs)
-        send_updated_status.delay(order.id)
+        send_updated_status(order.id)
         order.save()
         return order
 
@@ -81,7 +81,7 @@ class OrderCancelSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {'detail': 'You cannot cancel finished order'})
 
-        send_cancel_status.delay(order.id, self.context['request'].user.id)
+        send_cancel_status(order.id, self.context['request'].user.id)
         order.status = 'CANCEL'
         order.save()
 

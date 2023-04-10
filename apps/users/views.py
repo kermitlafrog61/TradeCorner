@@ -96,7 +96,7 @@ class PasswordRestore(generics.GenericAPIView):
 
     def get(self, request: Request) -> Response:
         create_activation_code(request.user)
-        send_password_restore.delay(request.user.id)
+        send_password_restore(request.user.id)
         return Response(
             {'message': 'Your restore code was sent to your email'},
             status=status.HTTP_200_OK)
