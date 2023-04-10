@@ -23,7 +23,7 @@ class Product(models.Model):
     categories = models.ManyToManyField(Category)
     title = models.CharField(max_length=50)
     image = models.ImageField(default='default.jpg')
-    price = models.PositiveSmallIntegerField()
+    price = models.PositiveIntegerField()
     description = models.TextField()
     is_sold = models.BooleanField(default=False)
     created_at = models.DateField(auto_now_add=True)
